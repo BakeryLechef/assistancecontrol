@@ -3,67 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM SECURE</title>
+    <title>ATTENDANCE PRO - TELEGRAPH</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #5d4037; --bg: #f5f5f5; --text: #2d2621; --accent: #d7ccc8; --gold: #ffd700; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 300px; }
-        .login-box input { width: 100%; font-size: 24px; text-align: center; margin-bottom: 20px; padding: 10px; border: 2px solid #ddd; border-radius: 8px; }
-        .btn { background: var(--primary); color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; color: white; z-index: 10000; }
-        .app-container { display: none; background: white; border-radius: 15px; overflow: hidden; max-width: 1100px; margin: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        :root { 
+            --primary: #5d4037; --secondary: #795548; --bg: #f5f5f5; --accent: #d7ccc8;
+            --text: #2d2621; --white: #ffffff; --danger: #c62828; --success: #2e7d32;
+            --gold: #ffd700;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text); }
+        
+        /* LOGIN OVERLAY */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9000; }
+        .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
+        .login-box input { width: 100%; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; padding: 10px; border: 2px solid var(--accent); border-radius: 8px; box-sizing: border-box; }
+
+        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; display: none; }
+        .nav-banner { background: #3e2723; color: white; padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; border-bottom: 4px solid var(--gold); }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: relative; }
+        .content { padding: 30px; }
+        
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .tab { padding: 12px 25px; cursor: pointer; border: 2px solid var(--primary); background: var(--white); border-radius: 25px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+        .tab.active { background: var(--primary); color: white; }
+        
         .section { display: none; }
-        .active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        .section.active { display: block; }
+        
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); }
+        
+        .btn { background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; width: 100%; margin-top: 10px; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 10000; font-weight: bold; color: var(--primary); }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--accent); }
+        th { background: var(--accent); color: var(--primary); }
+        
+        select, input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); box-sizing: border-box; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay"><h2>CONECTANDO... ESPERE</h2></div>
+<div id="loading-overlay"><h2>SYNCING DATA...</h2></div>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="color:var(--primary)">SECURE ACCESS</h2>
-        <input type="password" id="pin-input" placeholder="PIN">
-        <button id="unlock-button" class="btn">UNLOCK</button>
-        <p id="error-msg" style="color:red; display:none; margin-top:10px;">PIN INCORRECTO</p>
+        <h2 style="margin-top:0; color:var(--primary)">SECURE LOGIN</h2>
+        <input type="password" id="pin-input" maxlength="4" placeholder="****">
+        <button id="unlock-btn" class="btn">UNLOCK SYSTEM</button>
+        <p id="login-error" style="color:red; display:none; font-weight:bold; margin-top:10px;">INVALID PIN</p>
     </div>
 </div>
 
 <div class="app-container" id="app-main">
-    <div class="header">
-        <h1 id="welcome-user">BIENVENIDO</h1>
-        <button onclick="location.reload()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">LOGOUT</button>
-    </div>
-    <div class="content">
-        <div style="margin-bottom:20px; background:#eee; padding:15px; border-radius:10px;">
-            <label>PLANTA:</label>
-            <select id="main-company" onchange="refreshUI()">
+    <div class="nav-banner">
+        <div style="display:flex; gap:15px; align-items:center;">
+            <label>COMPANY:</label>
+            <select id="main-company" style="width:150px;" onchange="updateDeptOptions(); fullRefresh();">
                 <option value="TELEGRAPH">TELEGRAPH</option>
                 <option value="PAINTER">PAINTER</option>
                 <option value="DATE">DATE</option>
             </select>
-            <label> DEPTO:</label>
-            <select id="main-dept" onchange="refreshUI()"></select>
+            <label>DEPT:</label>
+            <select id="main-dept" style="width:200px;" onchange="refreshUI();"></select>
         </div>
-        
+    </div>
+
+    <div class="header">
+        <h1 id="welcome-title">ATTENDANCE CONTROL</h1>
+        <button onclick="location.reload()" style="position:absolute; right:20px; top:20px; background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">LOGOUT</button>
+    </div>
+
+    <div class="content">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('capture', event)">RECORD</button>
+            <button class="tab" onclick="showTab('employees', event)">STAFF</button>
+            <button class="tab" onclick="showTab('query', event)">HISTORY & ANALYTICS</button>
+        </div>
+
         <div id="capture" class="section active">
-            <h3>REGISTRAR ASISTENCIA</h3>
-            <select id="sel-employee"></select>
-            <select id="concept" style="margin-top:10px;">
-                <option value="SICK">SICK</option>
-                <option value="PERSONAL">PERSONAL</option>
-                <option value="TARDY">TARDY</option>
-                <option value="LEFT EARLY">LEFT EARLY</option>
-                <option value="VACATIONS">VACATIONS</option>
-            </select>
-            <input type="date" id="start-date" style="margin-top:10px; width:100%; padding:10px; box-sizing:border-box;">
-            <button class="btn" style="margin-top:15px;" onclick="saveRecord()">GUARDAR REGISTRO</button>
+            <div style="max-width: 600px; margin: auto;">
+                <label>SELECT EMPLOYEE:</label>
+                <select id="sel-employee"></select>
+                
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <div style="flex: 1;">
+                        <label>CONCEPT:</label>
+                        <select id="concept" onchange="handleConceptLogic()">
+                            <option value="SICK">SICK</option>
+                            <option value="PERSONAL">PERSONAL</option>
+                            <option value="TARDY">TARDY</option>
+                            <option value="LEFT EARLY">LEFT EARLY</option>
+                            <option value="VACATIONS">VACATIONS</option>
+                            <option value="LOA">LOA</option>
+                        </select>
+                    </div>
+                    <div id="days-wrapper" style="flex: 1;">
+                        <label>DAYS:</label>
+                        <input type="number" id="days" value="1" min="1" oninput="updateReturnDate()">
+                    </div>
+                </div>
+
+                <div style="margin-top:15px;"><label>START DATE:</label><input type="date" id="start-date" onchange="updateReturnDate()"></div>
+                
+                <div id="return-box" style="background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-top:15px; font-size: 1.1em;">
+                    EXPECTED RETURN: <span id="return-date-text">---</span>
+                </div>
+
+                <div style="margin-top:15px;">
+                    <label>NOTES / REASON:</label>
+                    <textarea id="notes" rows="2" placeholder="OPTIONAL INFO..."></textarea>
+                </div>
+
+                <button class="btn" onclick="saveRecord()">SAVE ATTENDANCE</button>
+            </div>
+        </div>
+
+        <div id="employees" class="section">
+            <div style="background: #efebe9; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--accent);">
+                <h4 style="margin:0 0 15px 0;">ADD NEW TEAM MEMBER</h4>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="new-name" placeholder="FULL NAME">
+                    <button class="btn" style="margin-top:0; width: 150px;" onclick="addEmployee()">ADD</button>
+                </div>
+            </div>
+            <table><thead><tr><th>NAME</th><th>DEPARTMENT</th></tr></thead><tbody id="staff-body"></tbody></table>
+        </div>
+
+        <div id="query" class="section">
+            <div class="charts-grid">
+                <div class="chart-card"><canvas id="chartConcepts"></canvas></div>
+                <div class="chart-card">
+                    <h4 style="text-align:center; margin-top:0;">CRITICAL OFFENDERS (TOP 8)</h4>
+                    <table style="font-size:11px"><tbody id="top-offenders"></tbody></table>
+                </div>
+            </div>
+            <h4 style="margin-bottom:10px;">RECENT ACTIVITY</h4>
+            <table id="logs-table"><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th></tr></thead><tbody id="logs-body"></tbody></table>
         </div>
     </div>
 </div>
@@ -78,48 +155,40 @@
 
     let cloudData = { logs: [], employees: [], users: [] };
     let currentUser = null;
+    let myCharts = {};
 
-    // FORZAMOS EL BOTÓN POR ID PARA QUE NO HAYA FALLO DE CLIC
-    document.getElementById('unlock-button').addEventListener('click', checkLogin);
+    document.getElementById('unlock-btn').addEventListener('click', checkLogin);
 
     async function checkLogin() {
         const pin = document.getElementById('pin-input').value;
-        if(!pin) { alert("INGRESE SU PIN"); return; }
-        
+        if(!pin) return;
         document.getElementById('loading-overlay').style.display = 'flex';
-        document.getElementById('error-msg').style.display = 'none';
-
+        
         try {
             const r = await fetch(CLOUD_URL);
             const d = await r.json();
             cloudData = d;
             
-            // Buscamos al usuario comparando el PIN como texto
             const user = d.users.find(u => u[1].toString().trim() === pin.trim());
             
             if(user) {
                 currentUser = { name: user[0], access: user[2] };
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('app-main').style.display = 'block';
-                document.getElementById('welcome-user').innerText = "BIENVENIDO: " + currentUser.name;
-                setupInitialView();
+                document.getElementById('welcome-title').innerText = "SYSTEM: " + currentUser.name;
+                setupAccess();
             } else {
-                document.getElementById('error-msg').style.display = 'block';
+                document.getElementById('login-error').style.display = 'block';
             }
-        } catch(e) {
-            console.error(e);
-            alert("ERROR DE CONEXIÓN: Revisa que tu Excel esté en 'Cualquier persona'.");
-        }
+        } catch(e) { alert("CONNECTION ERROR - CHECK EXCEL PERMISSIONS"); }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
-    function setupInitialView() {
+    function setupAccess() {
         const compSel = document.getElementById('main-company');
         const deptSel = document.getElementById('main-dept');
-        
         if(currentUser.access !== 'ADMIN') {
-            compSel.value = "TELEGRAPH";
-            compSel.disabled = true;
+            compSel.value = "TELEGRAPH"; compSel.disabled = true;
             deptSel.innerHTML = `<option value="${currentUser.access}">${currentUser.access}</option>`;
             deptSel.disabled = true;
         } else {
@@ -131,35 +200,142 @@
     function updateDeptOptions() {
         const comp = document.getElementById('main-company').value;
         const opts = DEPARTMENTS[comp] || ["GENERAL"];
-        document.getElementById('main-dept').innerHTML = opts.map(d => `<option value="${d}">${d}</option>`).join('');
+        let h = (currentUser.access === 'ADMIN') ? '<option value="ALL">ALL DEPTS</option>' : '';
+        h += opts.map(d => `<option value="${d}">${d}</option>`).join('');
+        document.getElementById('main-dept').innerHTML = h;
+    }
+
+    async function fullRefresh() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        const r = await fetch(CLOUD_URL);
+        const d = await r.json();
+        cloudData.logs = d.logs; cloudData.employees = d.employees;
+        refreshUI();
+        document.getElementById('loading-overlay').style.display = 'none';
     }
 
     function refreshUI() {
         const comp = document.getElementById('main-company').value;
         const dept = document.getElementById('main-dept').value;
-        const fEmps = cloudData.employees.filter(e => e[1] === comp && e[2] === dept);
+        
+        const fEmps = cloudData.employees.filter(e => e[1] === comp && (dept === 'ALL' || e[2] === dept));
         document.getElementById('sel-employee').innerHTML = fEmps.map(e => `<option value="${e[0]}">${e[0]}</option>`).join('');
+        document.getElementById('staff-body').innerHTML = fEmps.map(e => `<tr><td>${e[0]}</td><td>${e[2]}</td></tr>`).join('');
+        
+        const fLogs = cloudData.logs.filter(l => l[0] === comp && (dept === 'ALL' || l[1] === dept));
+        document.getElementById('logs-body').innerHTML = fLogs.slice(-25).reverse().map(l => `
+            <tr><td>${l[3].split('T')[0]}</td><td><b>${l[2]}</b></td><td>${l[6]}</td><td>${l[4]}</td><td>${l[7]||''}</td></tr>
+        `).join('');
+        
+        updateAnalytics(fLogs);
+    }
+
+    function handleConceptLogic() {
+        const c = document.getElementById('concept').value;
+        const wrapper = document.getElementById('days-wrapper');
+        const retBox = document.getElementById('return-box');
+        
+        if(c === 'TARDY' || c === 'LEFT EARLY') {
+            wrapper.style.visibility = 'hidden';
+            retBox.style.display = 'none';
+        } else {
+            wrapper.style.visibility = 'visible';
+            retBox.style.display = 'block';
+            updateReturnDate();
+        }
+    }
+
+    function updateReturnDate() {
+        const s = document.getElementById('start-date').value;
+        const d = parseInt(document.getElementById('days').value) || 1;
+        if(!s) return;
+        
+        let cur = new Date(s + 'T00:00:00');
+        let added = 0;
+        // Business Days Logic: Skip Sat (6) and Sun (0)
+        while(added < d) {
+            cur.setDate(cur.getDate() + 1);
+            if(cur.getDay() !== 0 && cur.getDay() !== 6) added++;
+        }
+        document.getElementById('return-date-text').innerText = cur.toISOString().split('T')[0];
     }
 
     async function saveRecord() {
         const name = document.getElementById('sel-employee').value;
         const date = document.getElementById('start-date').value;
-        if(!name || !date) return alert("LLENE TODOS LOS CAMPOS");
+        const concept = document.getElementById('concept').value;
+        if(!name || !date) return alert("PLEASE SELECT NAME AND DATE");
         
         document.getElementById('loading-overlay').style.display = 'flex';
+        
+        // Final values based on logic
+        const finalDays = (concept === 'TARDY' || concept === 'LEFT EARLY') ? 0 : document.getElementById('days').value;
+        const finalReturn = (concept === 'TARDY' || concept === 'LEFT EARLY') ? "N/A" : document.getElementById('return-date-text').innerText;
+
         const payload = {
             action: "saveLog",
             company: document.getElementById('main-company').value,
             dept: document.getElementById('main-dept').value,
             name: name,
             rawDate: date,
-            concept: document.getElementById('concept').value,
-            days: 1, return: "N/A", notes: "WEB REG"
+            concept: concept,
+            days: finalDays,
+            return: finalReturn,
+            notes: document.getElementById('notes').value.toUpperCase()
         };
+
+        try {
+            await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify(payload) });
+            alert("RECORD SAVED SUCCESSFULLY!");
+            document.getElementById('notes').value = "";
+            fullRefresh();
+        } catch(e) { alert("ERROR SAVING"); }
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function updateAnalytics(data) {
+        const counts = {}, offenders = {};
+        const critical = ['SICK', 'PERSONAL', 'TARDY', 'LEFT EARLY'];
         
-        await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify(payload) });
-        alert("GUARDADO CORRECTAMENTE");
-        location.reload();
+        data.forEach(l => { 
+            counts[l[4]] = (counts[l[4]] || 0) + 1;
+            if(critical.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
+        });
+
+        const sorted = Object.entries(offenders).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        document.getElementById('top-offenders').innerHTML = sorted.map(([n,c])=>`<tr><td>${n}</td><td><b>${c}</b></td></tr>`).join('');
+
+        if(myCharts.c1) myCharts.c1.destroy();
+        myCharts.c1 = new Chart(document.getElementById('chartConcepts'), {
+            type: 'pie',
+            data: { 
+                labels: Object.keys(counts), 
+                datasets: [{ 
+                    data: Object.values(counts), 
+                    backgroundColor: ['#c62828', '#f57c00', '#2e7d32', '#5d4037', '#0277bd', '#9c27b0'] 
+                }] 
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    async function addEmployee() {
+        const name = document.getElementById('new-name').value.trim().toUpperCase();
+        if(!name) return;
+        const dept = document.getElementById('main-dept').value;
+        if(dept === 'ALL') return alert("SELECT A SPECIFIC DEPT FIRST");
+        
+        document.getElementById('loading-overlay').style.display = 'flex';
+        await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmployee", name, company: document.getElementById('main-company').value, dept }) });
+        document.getElementById('new-name').value = "";
+        fullRefresh();
+    }
+
+    function showTab(id, e) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.currentTarget.classList.add('active');
     }
 </script>
 </body>
