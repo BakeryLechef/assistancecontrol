@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ATTENDANCE CONTROL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATTENDANCE SYSTEM - SECURE</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
@@ -11,121 +12,120 @@
             --info: #0277bd; --warning: #f57c00; --gold: #ffd700;
         }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text); }
-        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; border: 1px solid var(--primary); }
+        
+        /* Login Overlay */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; color: white; }
+        .login-box { background: white; padding: 40px; border-radius: 15px; color: var(--text); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
+        .login-box input { width: 100%; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; padding: 10px; border: 2px solid var(--accent); border-radius: 8px; }
+
+        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; border: 1px solid var(--primary); display: none; }
         .nav-banner { background: #3e2723; color: white; padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; border-bottom: 4px solid var(--gold); }
-        .selector-group { display: flex; align-items: center; gap: 8px; }
-        select, input, textarea { padding: 10px; border-radius: 8px; border: 2px solid var(--accent); font-size: 14px; outline: none; }
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: relative; }
+        .logout-btn { position: absolute; right: 20px; top: 20px; background: #c62828; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .content { padding: 30px; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
         .tab { padding: 12px 25px; cursor: pointer; border: 2px solid var(--primary); background: var(--white); border-radius: 25px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
         .tab.active { background: var(--primary); color: white; }
         .section { display: none; }
         .section.active { display: block; }
-        #analytics-container { display: block; margin-bottom: 20px; }
+        
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 20px; }
         .chart-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); min-height: 280px; }
-        .toggle-btn { background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
-        .btn-print { background: #444; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold; margin-left: 10px; }
         .filter-panel { background: #efebe9; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end; border: 1px solid var(--accent); }
-        #toast { position: fixed; top: 20px; right: 20px; background: var(--success); color: white; padding: 15px 25px; border-radius: 8px; font-weight: bold; display: none; z-index: 3000; }
+        select, input, textarea { padding: 10px; border-radius: 8px; border: 2px solid var(--accent); font-size: 14px; width: 100%; box-sizing: border-box; }
         .btn { background: var(--primary); color: white; padding: 14px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; width: 100%; }
-        .btn-term { background: #eee; color: #c62828; padding: 5px 12px; border-radius: 4px; border: 1px solid #c62828; font-weight: bold; cursor: pointer; }
-        .btn-edit { background: var(--warning); color: white; padding: 5px 10px; font-size: 10px; border-radius: 4px; border: none; cursor: pointer; }
-        .btn-return { background: var(--info); color: white; padding: 5px 10px; font-size: 10px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; }
-        
+        #toast { position: fixed; top: 20px; right: 20px; background: var(--success); color: white; padding: 15px 25px; border-radius: 8px; display: none; z-index: 9999; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 8000; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--accent); vertical-align: middle; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--accent); }
         th { background: var(--accent); color: var(--primary); }
-        
-        #sync-indicator { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; display: none; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; font-weight: bold; }
-
-        @media print {
-            body * { visibility: hidden; }
-            #logs-table-container, #logs-table-container * { visibility: visible; }
-            #logs-table-container { position: absolute; left: 0; top: 0; width: 100%; }
-            .btn-edit, .btn-return, .filter-panel, .tabs, .header, .nav-banner { display: none !important; }
-        }
     </style>
 </head>
 <body>
 
+<div id="login-overlay">
+    <div class="login-box">
+        <h2 style="margin-top:0">SYSTEM LOGIN</h2>
+        <input type="password" id="pin-input" maxlength="4" placeholder="****">
+        <button class="btn" onclick="checkLogin()">UNLOCK</button>
+        <p id="login-error" style="color:red; display:none; margin-top:10px;">Invalid PIN</p>
+    </div>
+</div>
+
 <div id="loading-overlay">SYNCING...</div>
-<div id="sync-indicator">☁️ UPDATING...</div>
 <div id="toast">✅ DONE!</div>
 
-<div class="app-container">
+<div class="app-container" id="app-main">
     <div class="nav-banner">
-        <div class="selector-group">
-            <label>COMPANY:</label>
-            <select id="main-company" onchange="updateDeptOptions(); fullRefresh();">
-                <option value="TELEGRAPH">TELEGRAPH</option>
-                <option value="PAINTER">PAINTER</option>
-                <option value="DATE">DATE</option>
-            </select>
-        </div>
-        <div class="selector-group">
-            <label>DEPT:</label>
-            <select id="main-dept" onchange="refreshUI();"></select>
+        <div style="display:flex; gap:20px;">
+            <div><label>COMPANY:</label>
+                <select id="main-company" onchange="updateDeptOptions(); fullRefresh();">
+                    <option value="TELEGRAPH">TELEGRAPH</option>
+                    <option value="PAINTER">PAINTER</option>
+                    <option value="DATE">DATE</option>
+                </select>
+            </div>
+            <div><label>DEPT:</label>
+                <select id="main-dept" onchange="refreshUI();"></select>
+            </div>
         </div>
     </div>
 
-    <div class="header"><h1>ATTENDANCE CONTROL</h1></div>
+    <div class="header">
+        <h1>ATTENDANCE CONTROL</h1>
+        <button class="logout-btn" onclick="logout()">LOGOUT</button>
+    </div>
 
     <div class="content">
         <div class="tabs">
             <button class="tab active" onclick="showTab('capture', event)">RECORD</button>
             <button class="tab" onclick="showTab('employees', event)">STAFF</button>
-            <button class="tab" onclick="showTab('query', event)">HISTORY & ANALYTICS</button>
+            <button class="tab" onclick="showTab('query', event)">HISTORY</button>
         </div>
 
         <div id="capture" class="section active">
-            <div class="form-group"><label>EMPLOYEE:</label><select id="sel-employee" style="width:100%"></select></div>
+            <label>EMPLOYEE:</label><select id="sel-employee"></select>
             <div style="display: flex; gap: 15px; margin-top: 15px;">
                 <div style="flex: 1;"><label>CONCEPT:</label>
-                    <select id="concept" onchange="handleConceptChange()" style="width:100%">
-                        <option value="SICK">SICK</option><option value="PERSONAL">PERSONAL</option>
-                        <option value="VACATIONS">VACATIONS</option><option value="LOA">LOA</option>
-                        <option value="TARDY">TARDY</option><option value="LEFT EARLY">LEFT EARLY</option>
+                    <select id="concept" onchange="handleConceptChange()">
+                        <option value="SICK">SICK</option>
+                        <option value="PERSONAL">PERSONAL</option>
+                        <option value="VACATIONS">VACATIONS</option>
+                        <option value="LOA">LOA</option>
+                        <option value="TARDY">TARDY</option>
+                        <option value="LEFT EARLY">LEFT EARLY</option>
                     </select>
                 </div>
-                <div id="days-wrapper" style="flex: 1;"><label>DAYS:</label><input type="number" id="days" value="1" min="1" oninput="updateReturn()" style="width:100%"></div>
+                <div id="days-wrapper" style="flex: 1;"><label>DAYS:</label><input type="number" id="days" value="1" min="1" oninput="updateReturn()"></div>
             </div>
-            <div style="margin-top:15px;"><label>START DATE:</label><input type="date" id="start-date" onchange="updateReturn()" style="width:100%"></div>
+            <div style="margin-top:15px;"><label>START DATE:</label><input type="date" id="start-date" onchange="updateReturn()"></div>
             <div id="return-box" style="background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-top:15px;">
                 RETURN DATE: <span id="return-date-text">---</span>
             </div>
-            <div style="margin-top:15px;"><label>NOTES:</label><textarea id="comments" rows="2" style="width:100%"></textarea></div>
-            <button class="btn" id="btn-save-main" style="margin-top:20px;" onclick="saveRecord()">SAVE RECORD</button>
+            <div style="margin-top:15px;"><label>NOTES:</label><textarea id="comments" rows="2" placeholder="ADDITIONAL INFO..."></textarea></div>
+            <button class="btn" style="margin-top:20px;" onclick="saveRecord()">SAVE RECORD</button>
         </div>
 
         <div id="employees" class="section">
-            <div style="background: #fdfdfd; padding: 20px; border-radius: 8px; border: 1px solid var(--accent); margin-bottom: 25px; text-align: center;">
-                <label>HIRE NEW STAFF:</label>
+            <div style="background: #fdfdfd; padding: 20px; border-radius: 8px; border: 1px solid var(--accent); margin-bottom: 25px;">
+                <label>ADD NEW STAFF:</label>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="new-name" placeholder="FULL NAME" style="flex: 1;">
-                    <button class="btn" style="width: 120px; padding: 10px;" onclick="addEmployee()">ADD</button>
+                    <input type="text" id="new-name" placeholder="FULL NAME">
+                    <button class="btn" style="width: 120px;" onclick="addEmployee()">ADD</button>
                 </div>
             </div>
-            <table><thead><tr><th>NAME</th><th>DEPARTMENT</th><th>ACTION</th></tr></thead><tbody id="staff-body"></tbody></table>
+            <table><thead><tr><th>NAME</th><th>DEPT</th><th>ACTION</th></tr></thead><tbody id="staff-body"></tbody></table>
         </div>
 
         <div id="query" class="section">
-            <button class="toggle-btn" onclick="toggleAnalytics()">📊 SHOW/HIDE ANALYTICS</button>
-            <button class="btn-print" onclick="window.print()">🖨️ PRINT REPORT</button>
-            
-            <div id="analytics-container">
-                <div class="charts-grid">
-                    <div class="chart-card"><canvas id="chartConcepts"></canvas></div>
-                    <div class="chart-card"><canvas id="chartTrend"></canvas></div>
-                    <div class="chart-card">
-                        <h4 style="margin:0 0 10px 0; color:var(--primary)">TOP 10 OFFENDERS</h4>
-                        <table style="font-size:11px"><tbody id="top-ten-body"></tbody></table>
-                    </div>
+            <div class="charts-grid">
+                <div class="chart-card"><canvas id="chartConcepts"></canvas></div>
+                <div class="chart-card">
+                    <h4 style="margin:0 0 10px 0;">TOP 10 OFFENDERS</h4>
+                    <table style="font-size:11px"><tbody id="top-ten-body"></tbody></table>
                 </div>
             </div>
-            <div class="filter-panel">
+            <div class="filter-panel" style="margin-top:20px;">
                 <select id="filter-emp" onchange="renderLogsTable()"></select>
                 <select id="filter-concept" onchange="renderLogsTable()">
                     <option value="ALL">ALL CONCEPTS</option>
@@ -133,12 +133,8 @@
                     <option value="VACATIONS">VACATIONS</option><option value="LOA">LOA</option>
                     <option value="TARDY">TARDY</option><option value="LEFT EARLY">LEFT EARLY</option>
                 </select>
-                <input type="date" id="filter-from" onchange="renderLogsTable()">
-                <input type="date" id="filter-to" onchange="renderLogsTable()">
             </div>
-            <div id="logs-table-container">
-                <table><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th><th class="btn-edit">ACTION</th></tr></thead><tbody id="logs-body"></tbody></table>
-            </div>
+            <table><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th></tr></thead><tbody id="logs-body"></tbody></table>
         </div>
     </div>
 </div>
@@ -146,205 +142,164 @@
 <script>
     const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxVCloFjfvAZUiWzxekZbgu26YdRe3155SA81dhZBXRUuoTTEsguSXyy10RO9-RbtLi/exec";
     
-    const DEPARTMENTS = { "TELEGRAPH": ["FROZEN DOUGH AM", "FROZEN DOUGH PM", "C2D", "BAKING"], "PAINTER": ["GENERAL"], "DATE": ["GENERAL"] };
-    const COLORS = { "SICK": "#c62828", "PERSONAL": "#f57c00", "VACATIONS": "#2e7d32", "LOA": "#795548", "TARDY": "#0277bd", "LEFT EARLY": "#9c27b0" };
-    let cloudData = { logs: [], employees: [] };
-    let myCharts = {};
-    let editingRef = null;
+    const DEPARTMENTS = { 
+        "TELEGRAPH": ["FROZEN DOUGH AM", "FROZEN DOUGH PM", "BAKING", "COOKIES", "COFFEE BEAN", "MAINTENANCE", "SANITATION", "KANBAN", "WAREHOUSE"], 
+        "PAINTER": ["GENERAL"], 
+        "DATE": ["GENERAL"] 
+    };
 
-    async function fullRefresh() {
+    let cloudData = { logs: [], employees: [], users: [] };
+    let currentUser = null;
+    let myCharts = {};
+
+    async function checkLogin() {
+        const pin = document.getElementById('pin-input').value;
         document.getElementById('loading-overlay').style.display = 'flex';
+        
         try {
             const r = await fetch(CLOUD_URL);
             const d = await r.json();
-            cloudData.logs = d.logs || [];
-            cloudData.employees = d.employees || [];
-            refreshUI();
-        } catch(e) { console.error("Sync Error:", e); }
+            cloudData = d;
+            
+            const user = d.users.find(u => u[1].toString() === pin);
+            if(user) {
+                currentUser = { name: user[0], access: user[2] };
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('app-main').style.display = 'block';
+                setupAccess();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        } catch(e) { alert("Error connecting to database"); }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
-    function toggleAnalytics() {
-        const c = document.getElementById('analytics-container');
-        c.style.display = (c.style.display === 'none') ? 'block' : 'none';
+    function setupAccess() {
+        const compSel = document.getElementById('main-company');
+        const deptSel = document.getElementById('main-dept');
+        
+        if(currentUser.access !== 'ADMIN') {
+            compSel.value = "TELEGRAPH";
+            compSel.disabled = true;
+            updateDeptOptions(currentUser.access);
+            deptSel.value = currentUser.access;
+            deptSel.disabled = true;
+        } else {
+            compSel.disabled = false;
+            deptSel.disabled = false;
+            updateDeptOptions();
+        }
+        refreshUI();
     }
 
-    function setDefaultFilters() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-        document.getElementById('filter-from').value = `${year}-${month}-01`;
-        document.getElementById('filter-to').value = `${year}-${month}-${lastDay}`;
+    function updateDeptOptions(lockedDept = null) {
+        const comp = document.getElementById('main-company').value;
+        const opts = DEPARTMENTS[comp];
+        let h = (currentUser.access === 'ADMIN') ? '<option value="ALL">ALL DEPTS</option>' : '';
+        h += opts.map(d => `<option value="${d}">${d}</option>`).join('');
+        document.getElementById('main-dept').innerHTML = h;
+    }
+
+    async function fullRefresh() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        const r = await fetch(CLOUD_URL);
+        const d = await r.json();
+        cloudData.logs = d.logs;
+        cloudData.employees = d.employees;
+        refreshUI();
+        document.getElementById('loading-overlay').style.display = 'none';
     }
 
     function refreshUI() {
-        const comp = document.getElementById('main-company').value, 
-              dept = document.getElementById('main-dept').value;
-        
-        // Empleados actuales filtrados por depto
+        const comp = document.getElementById('main-company').value;
+        const dept = document.getElementById('main-dept').value;
         const fEmps = cloudData.employees.filter(e => e[1] === comp && (dept === 'ALL' || e[2] === dept));
-        
         document.getElementById('sel-employee').innerHTML = fEmps.map(e => `<option value="${e[0]}">${e[0]}</option>`).join('');
-        document.getElementById('staff-body').innerHTML = fEmps.map(e => `<tr><td><b>${e[0]}</b></td><td>${e[2]}</td><td><button class="btn-term" onclick="terminateEmployee('${e[0]}')">TERMINATE</button></td></tr>`).join('');
-        
-        // --- FILTRO HISTORY ESTRICTO POR DEPTO ---
-        const historicNamesInDept = [...new Set(cloudData.logs.filter(l => l[0] === comp && (dept === 'ALL' || l[1] === dept)).map(l => l[2]))];
-        const allNamesInDept = [...new Set([...fEmps.map(e=>e[0]), ...historicNamesInDept])].sort();
-        
-        document.getElementById('filter-emp').innerHTML = '<option value="ALL">ALL STAFF</option>' + allNamesInDept.map(n => `<option value="${n}">${n}</option>`).join('');
-        
+        document.getElementById('staff-body').innerHTML = fEmps.map(e => `<tr><td>${e[0]}</td><td>${e[2]}</td><td>---</td></tr>`).join('');
+        const historic = [...new Set(cloudData.logs.filter(l => l[0] === comp && (dept === 'ALL' || l[1] === dept)).map(l => l[2]))].sort();
+        document.getElementById('filter-emp').innerHTML = '<option value="ALL">ALL STAFF</option>' + historic.map(n => `<option value="${n}">${n}</option>`).join('');
         renderLogsTable();
     }
 
-    async function saveRecord() {
-        const name = document.getElementById('sel-employee').value, date = document.getElementById('start-date').value, concept = document.getElementById('concept').value;
-        if(!name || !date) return alert("Fill Name and Date");
-
-        if(editingRef) {
-            cloudData.logs = cloudData.logs.filter(l => !(l[2] === editingRef.n && l[3].toString().split('T')[0] === editingRef.d && l[4] === editingRef.c));
-        }
-
-        const comp = document.getElementById('main-company').value, dept = document.getElementById('main-dept').value, days = (['TARDY', 'LEFT EARLY', 'LOA'].includes(concept)) ? 0 : document.getElementById('days').value, ret = document.getElementById('return-date-text').innerText, notes = document.getElementById('comments').value.toUpperCase();
-        
-        cloudData.logs.push([comp, dept, name, date, concept, days, (concept === 'LOA' ? 'PENDING' : ret), notes]);
-        renderLogsTable(); 
-        clearCapture(); 
-        editingRef = null; 
-        document.getElementById('btn-save-main').innerText = "SAVE RECORD";
-        showToast("✅ SAVED");
-        showSync(true); fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "saveLog", company: comp, dept, name, rawDate: date, concept, days, return: (concept === 'LOA' ? 'PENDING' : ret), notes }) }).then(()=>showSync(false));
-    }
-
-    function clearCapture() { 
-        document.getElementById('sel-employee').selectedIndex = -1;
-        document.getElementById('start-date').value = ""; 
-        document.getElementById('comments').value = ""; 
-        document.getElementById('days').value = "1";
-        document.getElementById('concept').selectedIndex = 0;
-        document.getElementById('return-date-text').innerText = "---"; 
-        handleConceptChange();
-    }
-
     function renderLogsTable() {
-        const comp = document.getElementById('main-company').value, 
-              dept = document.getElementById('main-dept').value, 
-              fEmp = document.getElementById('filter-emp').value, 
-              fCon = document.getElementById('filter-concept').value,
-              fFrom = document.getElementById('filter-from').value,
-              fTo = document.getElementById('filter-to').value;
-
-        let filtered = cloudData.logs.filter(l => {
-            const dateVal = l[3].toString().split('T')[0]; 
-            return l[0] === comp && (dept === 'ALL' || l[1] === dept) && (fEmp === 'ALL' || l[2] === fEmp) && (fCon === 'ALL' || l[4] === fCon) && (fFrom ? dateVal >= fFrom : true) && (fTo ? dateVal <= fTo : true);
-        });
-        filtered.sort((a,b) => b[3].toString().localeCompare(a[3].toString()));
-        document.getElementById('logs-body').innerHTML = filtered.map(l => {
-            let rawReturn = l[6];
-            let retDisplay;
-            if(l[4] === 'LOA' && (rawReturn === 'PENDING' || rawReturn === '---')) {
-                retDisplay = `<button class="btn-return" onclick="setReturnManual('${l[2]}','${l[3]}')">SET RETURN</button>`;
-            } else {
-                retDisplay = formatDate(rawReturn);
-            }
-            return `<tr><td>${formatDate(l[3])}</td><td><b>${l[2]}</b></td><td>${retDisplay}</td><td><span style="color:${COLORS[l[4]]}; font-weight:bold;">${l[4]}</span></td><td>${l[7]||''}</td><td class="btn-edit"><button class="btn-edit" onclick="handleEdit('${l[2]}','${l[3]}','${l[4]}','${l[5]}','${l[7]}')">EDIT</button></td></tr>`;
-        }).join('');
+        const comp = document.getElementById('main-company').value;
+        const dept = document.getElementById('main-dept').value;
+        const fEmp = document.getElementById('filter-emp').value;
+        const fCon = document.getElementById('filter-concept').value;
+        let filtered = cloudData.logs.filter(l => 
+            l[0] === comp && (dept === 'ALL' || l[1] === dept) && (fEmp === 'ALL' || l[2] === fEmp) && (fCon === 'ALL' || l[4] === fCon)
+        );
+        document.getElementById('logs-body').innerHTML = filtered.slice(-30).reverse().map(l => `
+            <tr><td>${l[3].split('T')[0]}</td><td><b>${l[2]}</b></td><td>${l[6]}</td><td>${l[4]}</td><td>${l[7]||''}</td></tr>
+        `).join('');
         updateAnalytics(filtered);
     }
 
-    function handleEdit(n,d,c,ds,nts) {
-        const opt = prompt("Type 'DELETE' or 'EDIT':");
-        if(opt?.toUpperCase()==='DELETE') { 
-            if(confirm("Delete?")) { cloudData.logs=cloudData.logs.filter(l=>!(l[2]===n && l[3].toString().split('T')[0]===d.toString().split('T')[0] && l[4]===c)); renderLogsTable(); } 
-        } else if(opt?.toUpperCase()==='EDIT') { 
-            editingRef = { n, d: d.toString().split('T')[0], c }; 
-            document.getElementById('sel-employee').value=n; 
-            document.getElementById('start-date').value=editingRef.d; 
-            document.getElementById('concept').value=c; 
-            document.getElementById('days').value=ds; 
-            document.getElementById('comments').value=nts; 
-            document.getElementById('btn-save-main').innerText = "UPDATE RECORD";
-            handleConceptChange(); 
-            showTab('capture', {currentTarget: document.querySelectorAll('.tab')[0]}); 
-        }
-    }
-
     function updateAnalytics(data) {
-        const counts = {}, offenders = {}, dates = {};
-        const offenderCriteria = ['SICK', 'PERSONAL', 'TARDY', 'LEFT EARLY'];
+        const counts = {}, offenders = {};
+        const criteria = ['SICK', 'PERSONAL', 'TARDY', 'LEFT EARLY'];
         data.forEach(l => { 
             counts[l[4]] = (counts[l[4]] || 0) + 1; 
-            const dKey = l[3].toString().split('T')[0];
-            dates[dKey] = (dates[dKey] || 0) + 1;
-            if(offenderCriteria.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
+            if(criteria.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
         });
         const sortedOff = Object.entries(offenders).sort((a,b)=>b[1]-a[1]).slice(0,10);
         document.getElementById('top-ten-body').innerHTML = sortedOff.map(([n,c])=>`<tr><td>${n}</td><td><b>${c}</b></td></tr>`).join('');
         if(myCharts.c1) myCharts.c1.destroy();
-        myCharts.c1 = new Chart(document.getElementById('chartConcepts'), { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: Object.keys(counts).map(k => COLORS[k] || '#999') }] }, options: { plugins: { legend: {display:false}, title: { display: true, text: 'INCIDENTS' } } } });
-        const trendLabels = Object.keys(dates).sort().slice(-10);
-        if(myCharts.c2) myCharts.c2.destroy();
-        myCharts.c2 = new Chart(document.getElementById('chartTrend'), { type: 'line', data: { labels: trendLabels.map(d => d.split('-').slice(1).join('/')), datasets: [{ label: 'Total', data: trendLabels.map(d=>dates[d]), borderColor: '#5d4037', fill: true, tension: 0.4 }] }, options: { plugins: { title: { display: true, text: 'TREND' } } } });
+        myCharts.c1 = new Chart(document.getElementById('chartConcepts'), {
+            type: 'pie',
+            data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#c62828', '#f57c00', '#2e7d32', '#795548', '#0277bd', '#9c27b0'] }] }
+        });
     }
 
-    async function setReturnManual(name, date) {
-        const r = prompt("Enter Return Date (YYYY-MM-DD):"); if(!r) return;
-        const dClean = date.toString().split('T')[0];
-        const idx = cloudData.logs.findIndex(l => l[2] === name && l[3].toString().split('T')[0] === dClean && l[4] === 'LOA');
-        if(idx !== -1) { 
-            cloudData.logs[idx][6] = r; 
-            renderLogsTable(); 
-            showSync(true); 
-            fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "saveLog", company: cloudData.logs[idx][0], dept: cloudData.logs[idx][1], name, rawDate: dClean, concept: 'LOA', days: 0, return: r, notes: cloudData.logs[idx][7] }) }).then(()=>showSync(false)); 
-        }
-    }
-
-    async function terminateEmployee(name) {
-        if(!confirm(`Terminate ${name}? History remains.`)) return;
+    async function saveRecord() {
+        const name = document.getElementById('sel-employee').value;
+        const date = document.getElementById('start-date').value;
+        const concept = document.getElementById('concept').value;
+        if(!name || !date) return alert("Please select employee and date");
         const comp = document.getElementById('main-company').value;
-        cloudData.employees = cloudData.employees.filter(e => !(e[0] === name && e[1] === comp));
-        refreshUI(); showSync(true); fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmp", name: name, company: "DELETE_FLAG" }) }).then(()=>showSync(false));
+        const dept = document.getElementById('main-dept').value;
+        const days = document.getElementById('days').value;
+        const ret = document.getElementById('return-date-text').innerText;
+        const notes = document.getElementById('comments').value.toUpperCase();
+        showToast("SAVING...");
+        await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "saveLog", company: comp, dept, name, rawDate: date, concept, days, return: ret, notes }) });
+        fullRefresh();
+        showToast("✅ SAVED");
     }
 
     async function addEmployee() {
-        const comp = document.getElementById('main-company').value, dept = document.getElementById('main-dept').value, name = document.getElementById('new-name').value.trim().toUpperCase();
-        if(dept === "ALL" || !name) return alert("Select Dept and Name");
-        if(cloudData.employees.some(e => e[0] === name && e[1] === comp)) return alert("Duplicate!");
-        cloudData.employees.push([name, comp, dept]); refreshUI(); document.getElementById('new-name').value = ""; showToast("👤 ADDED");
-        showSync(true); fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmp", name, company: comp, dept }) }).then(()=>showSync(false));
+        const name = document.getElementById('new-name').value.trim().toUpperCase();
+        if(!name) return alert("Enter Name");
+        const comp = document.getElementById('main-company').value;
+        const dept = document.getElementById('main-dept').value;
+        if(dept === 'ALL') return alert("Select a specific department first");
+        showToast("ADDING...");
+        await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmployee", name, company: comp, dept }) });
+        document.getElementById('new-name').value = "";
+        fullRefresh();
     }
 
     function updateReturn() {
-        const c = document.getElementById('concept').value, s = document.getElementById('start-date').value, d = parseInt(document.getElementById('days').value) || 0, target = document.getElementById('return-date-text');
-        if(!s) return target.innerText = "---";
-        if(c === 'LOA') return target.innerText = "PENDING";
-        if(['TARDY', 'LEFT EARLY'].includes(c)) return target.innerText = formatDate(s);
-        let cur = new Date(s + 'T00:00:00'); let added = 0;
+        const s = document.getElementById('start-date').value;
+        const d = parseInt(document.getElementById('days').value) || 0;
+        if(!s) return;
+        let cur = new Date(s + 'T00:00:00');
+        let added = 0;
         while(added < d) { cur.setDate(cur.getDate()+1); if(cur.getDay()!==0 && cur.getDay()!==6) added++; }
-        target.innerText = formatDate(cur.toISOString().split('T')[0]);
+        document.getElementById('return-date-text').innerText = cur.toISOString().split('T')[0];
     }
 
-    function handleConceptChange() { document.getElementById('days-wrapper').style.visibility = (['TARDY', 'LEFT EARLY', 'LOA'].includes(document.getElementById('concept').value)) ? 'hidden' : 'visible'; updateReturn(); }
-    
-    function formatDate(d) { 
-        if(!d || d === '---' || d === 'PENDING') return d; 
-        let str = d.toString();
-        if (str.match(/^[A-Z]{3} \d{2}, \d{4}$/)) return str;
-        let clean = str.split('T')[0];
-        const p = clean.split('-'); 
-        if(p.length < 3) return d; 
-        const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-        return `${months[parseInt(p[1])-1]} ${p[2]}, ${p[0]}`; 
+    function logout() { location.reload(); }
+    function showTab(id, e) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.currentTarget.classList.add('active');
     }
-
+    function handleConceptChange() {
+        document.getElementById('days-wrapper').style.visibility = (['TARDY', 'LEFT EARLY', 'LOA'].includes(document.getElementById('concept').value)) ? 'hidden' : 'visible';
+    }
     function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none', 2500); }
-    function showSync(s) { document.getElementById('sync-indicator').style.display = s ? 'block' : 'none'; }
-    function showTab(id, e) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); }
-    function updateDeptOptions() { const comp = document.getElementById('main-company').value, opts = DEPARTMENTS[comp]; let h = opts.length > 1 ? '<option value="ALL">ALL DEPTS</option>' : ''; h += opts.map(d => `<option value="${d}">${d}</option>`).join(''); document.getElementById('main-dept').innerHTML = h; refreshUI(); }
-
-    setDefaultFilters();
-    updateDeptOptions();
-    fullRefresh();
 </script>
 </body>
 </html>
