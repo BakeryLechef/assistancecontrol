@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATTENDANCE PRO - TELEGRAPH</title>
+    <title>ATTENDANCE CONTROL PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
@@ -14,42 +14,50 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text); }
         
         /* LOGIN OVERLAY */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9000; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
         .login-box input { width: 100%; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; padding: 10px; border: 2px solid var(--accent); border-radius: 8px; box-sizing: border-box; }
 
-        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; display: none; }
+        /* MAIN APP */
+        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; display: none; border: 1px solid var(--primary); }
         .nav-banner { background: #3e2723; color: white; padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; border-bottom: 4px solid var(--gold); }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: relative; }
         .content { padding: 30px; }
         
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
-        .tab { padding: 12px 25px; cursor: pointer; border: 2px solid var(--primary); background: var(--white); border-radius: 25px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+        .tab { padding: 12px 25px; cursor: pointer; border: 2px solid var(--primary); background: var(--white); border-radius: 25px; font-weight: bold; color: var(--primary); text-transform: uppercase; transition: 0.3s; }
         .tab.active { background: var(--primary); color: white; }
         
         .section { display: none; }
         .section.active { display: block; }
         
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .chart-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); }
+        /* ANALYTICS STYLE */
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
         .btn { background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; width: 100%; margin-top: 10px; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 10000; font-weight: bold; color: var(--primary); }
+        .btn:hover { background: #4e342e; }
+        
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 10000; flex-direction: column; }
         
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--accent); }
-        th { background: var(--accent); color: var(--primary); }
+        th { background: #efebe9; color: var(--primary); font-weight: bold; }
         
-        select, input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); box-sizing: border-box; font-size: 14px; }
+        select, input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); box-sizing: border-box; margin-top: 5px; }
+        label { font-weight: bold; font-size: 13px; color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay"><h2>SYNCING DATA...</h2></div>
+<div id="loading-overlay">
+    <div style="border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+    <h2 style="color:var(--primary)">SYNCING DATABASE...</h2>
+</div>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="margin-top:0; color:var(--primary)">SECURE LOGIN</h2>
+        <h2 style="margin-top:0; color:var(--primary)">SECURITY CHECK</h2>
         <input type="password" id="pin-input" maxlength="4" placeholder="****">
         <button id="unlock-btn" class="btn">UNLOCK SYSTEM</button>
         <p id="login-error" style="color:red; display:none; font-weight:bold; margin-top:10px;">INVALID PIN</p>
@@ -59,13 +67,13 @@
 <div class="app-container" id="app-main">
     <div class="nav-banner">
         <div style="display:flex; gap:15px; align-items:center;">
-            <label>COMPANY:</label>
+            <label style="color:white">COMPANY:</label>
             <select id="main-company" style="width:150px;" onchange="updateDeptOptions(); fullRefresh();">
                 <option value="TELEGRAPH">TELEGRAPH</option>
                 <option value="PAINTER">PAINTER</option>
                 <option value="DATE">DATE</option>
             </select>
-            <label>DEPT:</label>
+            <label style="color:white">DEPARTMENT:</label>
             <select id="main-dept" style="width:200px;" onchange="refreshUI();"></select>
         </div>
     </div>
@@ -77,14 +85,14 @@
 
     <div class="content">
         <div class="tabs">
-            <button class="tab active" onclick="showTab('capture', event)">RECORD</button>
-            <button class="tab" onclick="showTab('employees', event)">STAFF</button>
-            <button class="tab" onclick="showTab('query', event)">HISTORY & ANALYTICS</button>
+            <button class="tab active" onclick="showTab('capture', event)">NEW RECORD</button>
+            <button class="tab" onclick="showTab('employees', event)">STAFF LIST</button>
+            <button class="tab" onclick="showTab('query', event)">ANALYTICS</button>
         </div>
 
         <div id="capture" class="section active">
-            <div style="max-width: 600px; margin: auto;">
-                <label>SELECT EMPLOYEE:</label>
+            <div style="max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--accent);">
+                <label>EMPLOYEE NAME:</label>
                 <select id="sel-employee"></select>
                 
                 <div style="display: flex; gap: 15px; margin-top: 15px;">
@@ -107,13 +115,13 @@
 
                 <div style="margin-top:15px;"><label>START DATE:</label><input type="date" id="start-date" onchange="updateReturnDate()"></div>
                 
-                <div id="return-box" style="background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-top:15px; font-size: 1.1em;">
+                <div id="return-box" style="background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-top:15px; font-size: 1.1em; border-bottom: 4px solid var(--gold);">
                     EXPECTED RETURN: <span id="return-date-text">---</span>
                 </div>
 
                 <div style="margin-top:15px;">
-                    <label>NOTES / REASON:</label>
-                    <textarea id="notes" rows="2" placeholder="OPTIONAL INFO..."></textarea>
+                    <label>COMMENTS / NOTES:</label>
+                    <textarea id="notes" rows="2" placeholder="ADDITIONAL DETAILS..."></textarea>
                 </div>
 
                 <button class="btn" onclick="saveRecord()">SAVE ATTENDANCE</button>
@@ -122,9 +130,9 @@
 
         <div id="employees" class="section">
             <div style="background: #efebe9; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--accent);">
-                <h4 style="margin:0 0 15px 0;">ADD NEW TEAM MEMBER</h4>
+                <h4 style="margin:0 0 10px 0;">REGISTER NEW STAFF</h4>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="new-name" placeholder="FULL NAME">
+                    <input type="text" id="new-name" placeholder="ENTER FULL NAME">
                     <button class="btn" style="margin-top:0; width: 150px;" onclick="addEmployee()">ADD</button>
                 </div>
             </div>
@@ -133,17 +141,22 @@
 
         <div id="query" class="section">
             <div class="charts-grid">
-                <div class="chart-card"><canvas id="chartConcepts"></canvas></div>
                 <div class="chart-card">
-                    <h4 style="text-align:center; margin-top:0;">CRITICAL OFFENDERS (TOP 8)</h4>
-                    <table style="font-size:11px"><tbody id="top-offenders"></tbody></table>
+                    <h4 style="margin:0 0 15px 0; text-align:center">CONCEPT DISTRIBUTION</h4>
+                    <canvas id="chartConcepts"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4 style="margin:0 0 15px 0; text-align:center">TOP OFFENDERS (CRITICAL)</h4>
+                    <table style="font-size:11px; margin-top:0;"><tbody id="top-offenders"></tbody></table>
                 </div>
             </div>
-            <h4 style="margin-bottom:10px;">RECENT ACTIVITY</h4>
-            <table id="logs-table"><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th></tr></thead><tbody id="logs-body"></tbody></table>
+            <h4 style="margin:20px 0 10px 0;">HISTORY LOG (LAST 25)</h4>
+            <table><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th></tr></thead><tbody id="logs-body"></tbody></table>
         </div>
     </div>
 </div>
+
+<style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
 
 <script>
     const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzcqO9g2od7E7yK6PlT273PB6r7JqH-IkRBrzFozedLr3t5AgyYh1_kg5SS6EBsQ57PVg/exec";
@@ -168,19 +181,18 @@
             const r = await fetch(CLOUD_URL);
             const d = await r.json();
             cloudData = d;
-            
             const user = d.users.find(u => u[1].toString().trim() === pin.trim());
             
             if(user) {
                 currentUser = { name: user[0], access: user[2] };
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('app-main').style.display = 'block';
-                document.getElementById('welcome-title').innerText = "SYSTEM: " + currentUser.name;
+                document.getElementById('welcome-title').innerText = "PORTAL: " + currentUser.name;
                 setupAccess();
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
-        } catch(e) { alert("CONNECTION ERROR - CHECK EXCEL PERMISSIONS"); }
+        } catch(e) { alert("DATABASE CONNECTION ERROR"); }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
@@ -234,13 +246,10 @@
         const c = document.getElementById('concept').value;
         const wrapper = document.getElementById('days-wrapper');
         const retBox = document.getElementById('return-box');
-        
         if(c === 'TARDY' || c === 'LEFT EARLY') {
-            wrapper.style.visibility = 'hidden';
-            retBox.style.display = 'none';
+            wrapper.style.visibility = 'hidden'; retBox.style.display = 'none';
         } else {
-            wrapper.style.visibility = 'visible';
-            retBox.style.display = 'block';
+            wrapper.style.visibility = 'visible'; retBox.style.display = 'block';
             updateReturnDate();
         }
     }
@@ -249,10 +258,8 @@
         const s = document.getElementById('start-date').value;
         const d = parseInt(document.getElementById('days').value) || 1;
         if(!s) return;
-        
         let cur = new Date(s + 'T00:00:00');
         let added = 0;
-        // Business Days Logic: Skip Sat (6) and Sun (0)
         while(added < d) {
             cur.setDate(cur.getDate() + 1);
             if(cur.getDay() !== 0 && cur.getDay() !== 6) added++;
@@ -264,58 +271,44 @@
         const name = document.getElementById('sel-employee').value;
         const date = document.getElementById('start-date').value;
         const concept = document.getElementById('concept').value;
-        if(!name || !date) return alert("PLEASE SELECT NAME AND DATE");
+        if(!name || !date) return alert("MISSING DATA");
         
         document.getElementById('loading-overlay').style.display = 'flex';
-        
-        // Final values based on logic
-        const finalDays = (concept === 'TARDY' || concept === 'LEFT EARLY') ? 0 : document.getElementById('days').value;
-        const finalReturn = (concept === 'TARDY' || concept === 'LEFT EARLY') ? "N/A" : document.getElementById('return-date-text').innerText;
-
         const payload = {
             action: "saveLog",
             company: document.getElementById('main-company').value,
             dept: document.getElementById('main-dept').value,
-            name: name,
-            rawDate: date,
-            concept: concept,
-            days: finalDays,
-            return: finalReturn,
+            name: name, rawDate: date, concept: concept,
+            days: (concept === 'TARDY' || concept === 'LEFT EARLY') ? 0 : document.getElementById('days').value,
+            return: (concept === 'TARDY' || concept === 'LEFT EARLY') ? "N/A" : document.getElementById('return-date-text').innerText,
             notes: document.getElementById('notes').value.toUpperCase()
         };
-
         try {
             await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify(payload) });
-            alert("RECORD SAVED SUCCESSFULLY!");
+            alert("SAVED!");
             document.getElementById('notes').value = "";
             fullRefresh();
-        } catch(e) { alert("ERROR SAVING"); }
+        } catch(e) { alert("ERROR"); }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
     function updateAnalytics(data) {
         const counts = {}, offenders = {};
         const critical = ['SICK', 'PERSONAL', 'TARDY', 'LEFT EARLY'];
-        
         data.forEach(l => { 
             counts[l[4]] = (counts[l[4]] || 0) + 1;
             if(critical.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
         });
-
         const sorted = Object.entries(offenders).sort((a,b)=>b[1]-a[1]).slice(0,8);
-        document.getElementById('top-offenders').innerHTML = sorted.map(([n,c])=>`<tr><td>${n}</td><td><b>${c}</b></td></tr>`).join('');
-
+        document.getElementById('top-offenders').innerHTML = sorted.map(([n,c])=>`<tr><td>${n}</td><td><b>${c} Records</b></td></tr>`).join('');
         if(myCharts.c1) myCharts.c1.destroy();
         myCharts.c1 = new Chart(document.getElementById('chartConcepts'), {
-            type: 'pie',
+            type: 'doughnut',
             data: { 
                 labels: Object.keys(counts), 
-                datasets: [{ 
-                    data: Object.values(counts), 
-                    backgroundColor: ['#c62828', '#f57c00', '#2e7d32', '#5d4037', '#0277bd', '#9c27b0'] 
-                }] 
+                datasets: [{ data: Object.values(counts), backgroundColor: ['#c62828', '#f57c00', '#2e7d32', '#5d4037', '#0277bd', '#9c27b0'] }] 
             },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            options: { plugins: { legend: { position: 'bottom' } } }
         });
     }
 
@@ -323,8 +316,7 @@
         const name = document.getElementById('new-name').value.trim().toUpperCase();
         if(!name) return;
         const dept = document.getElementById('main-dept').value;
-        if(dept === 'ALL') return alert("SELECT A SPECIFIC DEPT FIRST");
-        
+        if(dept === 'ALL') return alert("SELECT DEPT");
         document.getElementById('loading-overlay').style.display = 'flex';
         await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmployee", name, company: document.getElementById('main-company').value, dept }) });
         document.getElementById('new-name').value = "";
@@ -334,8 +326,7 @@
     function showTab(id, e) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        e.currentTarget.classList.add('active');
+        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
     }
 </script>
 </body>
