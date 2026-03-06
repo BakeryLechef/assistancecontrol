@@ -12,12 +12,16 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text); }
         
-        /* SEGURIDAD: Pantalla de Login */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 10000; }
         .login-box { background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         
         .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; border: 1px solid var(--primary); display: none; }
-        .nav-banner { background: #3e2723; color: white; padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; border-bottom: 4px solid var(--gold); }
+        .nav-banner { background: #3e2723; color: white; padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; border-bottom: 4px solid var(--gold); position: relative; }
+        
+        /* Estilo para el Usuario y Log Out */
+        .user-info { position: absolute; right: 20px; display: flex; align-items: center; gap: 15px; font-size: 14px; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+
         .selector-group { display: flex; align-items: center; gap: 8px; }
         select, input, textarea { padding: 10px; border-radius: 8px; border: 2px solid var(--accent); font-size: 14px; outline: none; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; }
@@ -46,14 +50,13 @@
         #sync-indicator { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; display: none; }
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; font-weight: bold; display: none; }
 
-        /* Clase para ocultar elementos Admin */
         .admin-only { display: none; }
 
         @media print {
             body * { visibility: hidden; }
             #logs-table-container, #logs-table-container * { visibility: visible; }
             #logs-table-container { position: absolute; left: 0; top: 0; width: 100%; }
-            .btn-edit, .btn-return, .filter-panel, .tabs, .header, .nav-banner { display: none !important; }
+            .btn-edit, .btn-return, .filter-panel, .tabs, .header, .nav-banner, .user-info { display: none !important; }
         }
     </style>
 </head>
@@ -62,7 +65,7 @@
 <div id="login-overlay">
     <div class="login-box">
         <h2 style="color:var(--primary); margin-top:0;">SECURITY ACCESS</h2>
-        <input type="password" id="pass-field" placeholder="PASSWORD" style="width:200px; text-align:center; margin-bottom:15px;"><br>
+        <input type="password" id="pass-field" placeholder="PIN" style="width:200px; text-align:center; margin-bottom:15px;"><br>
         <button class="btn" style="width:224px;" onclick="checkLogin()">ENTER SYSTEM</button>
     </div>
 </div>
@@ -84,6 +87,11 @@
         <div class="selector-group">
             <label>DEPT:</label>
             <select id="main-dept" onchange="refreshUI();"></select>
+        </div>
+        
+        <div class="user-info">
+            <span id="user-display-name" style="font-weight: bold; color: var(--gold);"></span>
+            <button class="btn-logout" onclick="location.reload()">LOG OUT</button>
         </div>
     </div>
 
@@ -160,10 +168,8 @@
 </div>
 
 <script>
-    // URL ACTUALIZADA
-    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxbhIZc8wfxQSBZky_YILmFdSZLu-2bob2wKA1K9kB6bfQaMaQMa2_STd3uZ8Oge_BLUg/exec";
+    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbyJDgLLMtqkMoIU9RirWAoZqB07P-bD_VR14zcXy_7XaRAKbWPL5I44vkYu6l6npDMbpQ/exec";
     
-    // DEPARTAMENTOS TELEGRAPH ACTUALIZADOS
     const DEPARTMENTS = { 
         "TELEGRAPH": ["FROZEN DOUGH AM", "FROZEN DOUGH PM", "C2D", "BAKING", "SANITATION", "MAINTENANCE", "COFFEE BEAN"], 
         "PAINTER": ["GENERAL"], 
@@ -192,6 +198,9 @@
             if(result.status === "success") {
                 userRole = result.role.toUpperCase();
                 allowedDept = result.deptAccess || "ALL";
+                
+                // Mostrar nombre del usuario (Se asume que el backend devuelve result.userName si existe, si no usa el PIN)
+                document.getElementById('user-display-name').innerText = (result.userName || "USER").toUpperCase();
                 
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('app-body').style.display = 'block';
@@ -240,12 +249,9 @@
     function updateDeptOptions() {
         const comp = document.getElementById('main-company').value;
         let opts = DEPARTMENTS[comp] || [];
-        
-        // FILTRADO DE SEGURIDAD PARA SUPERVISORES
         if(userRole !== "ADMIN" && allowedDept !== "ALL") {
             opts = opts.filter(d => d === allowedDept);
         }
-
         let h = (opts.length > 1) ? '<option value="ALL">ALL DEPTS</option>' : '';
         h += opts.map(d => `<option value="${d}">${d}</option>`).join('');
         document.getElementById('main-dept').innerHTML = h;
@@ -298,7 +304,6 @@
         updateAnalytics(filtered);
     }
 
-    // --- FUNCIONES AUXILIARES MANTENIDAS (IGUALES A TU ORIGINAL) ---
     function clearCapture() { document.getElementById('sel-employee').selectedIndex = -1; document.getElementById('start-date').value = ""; document.getElementById('comments').value = ""; document.getElementById('days').value = "1"; document.getElementById('concept').selectedIndex = 0; document.getElementById('return-date-text').innerText = "---"; handleConceptChange(); }
     function handleConceptChange() { document.getElementById('days-wrapper').style.visibility = (['TARDY', 'LEFT EARLY', 'LOA'].includes(document.getElementById('concept').value)) ? 'hidden' : 'visible'; updateReturn(); }
     function updateReturn() { const c = document.getElementById('concept').value, s = document.getElementById('start-date').value, d = parseInt(document.getElementById('days').value) || 0, target = document.getElementById('return-date-text'); if(!s) return target.innerText = "---"; if(c === 'LOA') return target.innerText = "PENDING"; if(['TARDY', 'LEFT EARLY'].includes(c)) return target.innerText = formatDate(s); let cur = new Date(s + 'T00:00:00'); let added = 0; while(added < d) { cur.setDate(cur.getDate()+1); if(cur.getDay()!==0 && cur.getDay()!==6) added++; } target.innerText = formatDate(cur.toISOString().split('T')[0]); }
