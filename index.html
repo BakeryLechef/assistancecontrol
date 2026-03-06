@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ATTENDANCE CONTROL PRO</title>
+    <title>ATTENDANCE CONTROL - SECURE</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
@@ -11,26 +11,18 @@
             --info: #0277bd; --warning: #f57c00; --gold: #ffd700;
         }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text); }
-        
-        /* SEGURIDAD: LOGIN OVERLAY */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
-        .login-box input { width: 100%; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; padding: 10px; border: 2px solid var(--accent); border-radius: 8px; box-sizing: border-box; }
-        
-        /* APP CONTAINER (Oculto hasta login) */
-        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; border: 1px solid var(--primary); display: none; }
-        
+        .app-container { width: 100%; max-width: 1200px; background: var(--white); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; margin: auto; border: 1px solid var(--primary); }
         .nav-banner { background: #3e2723; color: white; padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; border-bottom: 4px solid var(--gold); }
         .selector-group { display: flex; align-items: center; gap: 8px; }
         select, input, textarea { padding: 10px; border-radius: 8px; border: 2px solid var(--accent); font-size: 14px; outline: none; }
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: relative; }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; }
         .content { padding: 30px; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
         .tab { padding: 12px 25px; cursor: pointer; border: 2px solid var(--primary); background: var(--white); border-radius: 25px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
         .tab.active { background: var(--primary); color: white; }
         .section { display: none; }
         .section.active { display: block; }
-        #analytics-container { display: block; margin-bottom: 20px; }
+        #analytics-container { display: none; margin-bottom: 20px; } /* Cerrado por defecto */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 20px; }
         .chart-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); min-height: 280px; }
         .toggle-btn { background: var(--secondary); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
@@ -46,37 +38,24 @@
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--accent); vertical-align: middle; }
         th { background: var(--accent); color: var(--primary); }
         
-        #sync-indicator { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; display: none; z-index: 3000; }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; font-weight: bold; flex-direction: column; }
+        #sync-indicator { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; display: none; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; font-weight: bold; }
 
         @media print {
             body * { visibility: hidden; }
             #logs-table-container, #logs-table-container * { visibility: visible; }
             #logs-table-container { position: absolute; left: 0; top: 0; width: 100%; }
-            .btn-edit, .btn-return, .filter-panel, .tabs, .header, .nav-banner, .btn-print, .toggle-btn { display: none !important; }
+            .btn-edit, .btn-return, .filter-panel, .tabs, .header, .nav-banner, .toggle-btn, .btn-print { display: none !important; }
         }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay">
-    <div style="border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
-    <div style="margin-top:10px">SYNCING DATABASE...</div>
-</div>
-
+<div id="loading-overlay">SYNCING...</div>
 <div id="sync-indicator">☁️ UPDATING...</div>
 <div id="toast">✅ DONE!</div>
 
-<div id="login-overlay">
-    <div class="login-box">
-        <h2 style="margin-top:0; color:var(--primary)">SECURE ACCESS</h2>
-        <input type="password" id="pin-input" maxlength="4" placeholder="****">
-        <button id="unlock-btn" class="btn">UNLOCK</button>
-        <p id="login-error" style="color:red; display:none; font-weight:bold; margin-top:15px;">INVALID PIN</p>
-    </div>
-</div>
-
-<div class="app-container" id="app-main">
+<div class="app-container">
     <div class="nav-banner">
         <div class="selector-group">
             <label>COMPANY:</label>
@@ -92,10 +71,7 @@
         </div>
     </div>
 
-    <div class="header">
-        <h1>ATTENDANCE CONTROL</h1>
-        <button onclick="location.reload()" style="position:absolute; right:20px; top:15px; background:var(--danger); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold;">LOGOUT</button>
-    </div>
+    <div class="header"><h1>ATTENDANCE CONTROL</h1></div>
 
     <div class="content">
         <div class="tabs">
@@ -149,6 +125,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="filter-panel">
                 <select id="filter-emp" onchange="renderLogsTable()"></select>
                 <select id="filter-concept" onchange="renderLogsTable()">
@@ -160,62 +137,27 @@
                 <input type="date" id="filter-from" onchange="renderLogsTable()">
                 <input type="date" id="filter-to" onchange="renderLogsTable()">
             </div>
+
             <div id="logs-table-container">
-                <table><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th><th class="btn-edit">ACTION</th></tr></thead><tbody id="logs-body"></tbody></table>
+                <table><thead><tr><th>DATE</th><th>NAME</th><th>RETURN</th><th>CONCEPT</th><th>NOTES</th><th>ACTION</th></tr></thead><tbody id="logs-body"></tbody></table>
             </div>
         </div>
     </div>
 </div>
 
-<style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
-
 <script>
-    // URL PROPORCIONADA
-    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzcqO9g2od7E7yK6PlT273PB6r7JqH-IkRBrzFozedLr3t5AgyYh1_kg5SS6EBsQ57PVg/exec";
+    // URL DE PRODUCCIÓN ACTUALIZADA
+    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxVCloFjfvAZUiWzxekZbgu26YdRe3155SA81dhZBXRUuoTTEsguSXyy10RO9-RbtLi/exec";
     
     const DEPARTMENTS = { "TELEGRAPH": ["FROZEN DOUGH AM", "FROZEN DOUGH PM", "C2D", "BAKING"], "PAINTER": ["GENERAL"], "DATE": ["GENERAL"] };
     const COLORS = { "SICK": "#c62828", "PERSONAL": "#f57c00", "VACATIONS": "#2e7d32", "LOA": "#795548", "TARDY": "#0277bd", "LEFT EARLY": "#9c27b0" };
-    let cloudData = { logs: [], employees: [], users: [] };
+    let cloudData = { logs: [], employees: [] };
     let myCharts = {};
     let editingRef = null;
-    let currentUser = null;
 
-    // SISTEMA DE UNLOCK
-    document.getElementById('unlock-btn').addEventListener('click', async () => {
-        const pin = document.getElementById('pin-input').value;
-        if(!pin) return;
-        document.getElementById('loading-overlay').style.display = 'flex';
-        
-        try {
-            const r = await fetch(CLOUD_URL);
-            const d = await r.json();
-            cloudData = d;
-            
-            const user = d.users.find(u => u[1].toString().trim() === pin.trim());
-            
-            if(user) {
-                currentUser = { name: user[0], access: user[2] };
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('app-main').style.display = 'block';
-                setupAccess();
-            } else {
-                document.getElementById('login-error').style.display = 'block';
-            }
-        } catch(e) { alert("DATABASE CONNECTION ERROR"); }
-        document.getElementById('loading-overlay').style.display = 'none';
-    });
-
-    function setupAccess() {
-        const compSel = document.getElementById('main-company');
-        const deptSel = document.getElementById('main-dept');
-        if(currentUser.access !== 'ADMIN') {
-            compSel.value = "TELEGRAPH"; compSel.disabled = true;
-            deptSel.innerHTML = `<option value="${currentUser.access}">${currentUser.access}</option>`;
-            deptSel.disabled = true;
-        } else {
-            updateDeptOptions();
-        }
-        refreshUI();
+    // --- SEGURIDAD: Sanitización de entradas ---
+    function sanitize(str) {
+        return str.replace(/[<>]/g, "").trim().toUpperCase();
     }
 
     async function fullRefresh() {
@@ -232,7 +174,7 @@
 
     function toggleAnalytics() {
         const c = document.getElementById('analytics-container');
-        c.style.display = (c.style.display === 'none') ? 'block' : 'none';
+        c.style.display = (c.style.display === 'none' || c.style.display === '') ? 'block' : 'none';
     }
 
     function setDefaultFilters() {
@@ -262,14 +204,22 @@
     }
 
     async function saveRecord() {
-        const name = document.getElementById('sel-employee').value, date = document.getElementById('start-date').value, concept = document.getElementById('concept').value;
-        if(!name || !date) return alert("Fill Name and Date");
+        const name = document.getElementById('sel-employee').value;
+        const date = document.getElementById('start-date').value;
+        const concept = document.getElementById('concept').value;
+        
+        if(!name || !date) return alert("Select Employee and Date");
 
+        // Seguridad: Si estamos editando, eliminamos localmente el anterior antes de subir
         if(editingRef) {
             cloudData.logs = cloudData.logs.filter(l => !(l[2] === editingRef.n && l[3].toString().split('T')[0] === editingRef.d && l[4] === editingRef.c));
         }
 
-        const comp = document.getElementById('main-company').value, dept = document.getElementById('main-dept').value, days = (['TARDY', 'LEFT EARLY', 'LOA'].includes(concept)) ? 0 : document.getElementById('days').value, ret = document.getElementById('return-date-text').innerText, notes = document.getElementById('comments').value.toUpperCase();
+        const comp = document.getElementById('main-company').value;
+        const dept = document.getElementById('main-dept').value;
+        const days = (['TARDY', 'LEFT EARLY', 'LOA'].includes(concept)) ? 0 : document.getElementById('days').value;
+        const ret = document.getElementById('return-date-text').innerText;
+        const notes = sanitize(document.getElementById('comments').value);
         
         cloudData.logs.push([comp, dept, name, date, concept, days, (concept === 'LOA' ? 'PENDING' : ret), notes]);
         renderLogsTable(); 
@@ -277,7 +227,12 @@
         editingRef = null; 
         document.getElementById('btn-save-main').innerText = "SAVE RECORD";
         showToast("✅ SAVED");
-        showSync(true); fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "saveLog", company: comp, dept, name, rawDate: date, concept, days, return: (concept === 'LOA' ? 'PENDING' : ret), notes }) }).then(()=>showSync(false));
+        
+        showSync(true); 
+        fetch(CLOUD_URL, { 
+            method: "POST", 
+            body: JSON.stringify({ action: "saveLog", company: comp, dept, name, rawDate: date, concept, days, return: (concept === 'LOA' ? 'PENDING' : ret), notes }) 
+        }).then(()=>showSync(false));
     }
 
     function clearCapture() { 
@@ -302,25 +257,41 @@
             const dateVal = l[3].toString().split('T')[0]; 
             return l[0] === comp && (dept === 'ALL' || l[1] === dept) && (fEmp === 'ALL' || l[2] === fEmp) && (fCon === 'ALL' || l[4] === fCon) && (fFrom ? dateVal >= fFrom : true) && (fTo ? dateVal <= fTo : true);
         });
+
         filtered.sort((a,b) => b[3].toString().localeCompare(a[3].toString()));
+
         document.getElementById('logs-body').innerHTML = filtered.map(l => {
             let rawReturn = l[6];
-            let retDisplay;
-            if(l[4] === 'LOA' && (rawReturn === 'PENDING' || rawReturn === '---')) {
-                retDisplay = `<button class="btn-return" onclick="setReturnManual('${l[2]}','${l[3]}')">SET RETURN</button>`;
-            } else {
-                retDisplay = formatDate(rawReturn);
-            }
-            return `<tr><td>${formatDate(l[3])}</td><td><b>${l[2]}</b></td><td>${retDisplay}</td><td><span style="color:${COLORS[l[4]]}; font-weight:bold;">${l[4]}</span></td><td>${l[7]||''}</td><td class="btn-edit"><button class="btn-edit" onclick="handleEdit('${l[2]}','${l[3]}','${l[4]}','${l[5]}','${l[7]}')">EDIT</button></td></tr>`;
+            let retDisplay = (l[4] === 'LOA' && (rawReturn === 'PENDING' || rawReturn === '---')) 
+                ? `<button class="btn-return" onclick="setReturnManual('${l[2]}','${l[3]}')">SET RETURN</button>`
+                : formatDate(rawReturn);
+
+            return `<tr>
+                <td>${formatDate(l[3])}</td>
+                <td><b>${l[2]}</b></td>
+                <td>${retDisplay}</td>
+                <td><span style="color:${COLORS[l[4]]}; font-weight:bold;">${l[4]}</span></td>
+                <td>${l[7]||''}</td>
+                <td>
+                    <button class="btn-edit" onclick="handleEdit('${l[2]}','${l[3]}','${l[4]}','${l[5]}','${l[7]}')">EDIT / DELETE</button>
+                </td>
+            </tr>`;
         }).join('');
         updateAnalytics(filtered);
     }
 
     function handleEdit(n,d,c,ds,nts) {
-        const opt = prompt("Type 'DELETE' or 'EDIT':");
-        if(opt?.toUpperCase()==='DELETE') { 
-            if(confirm("Delete?")) { cloudData.logs=cloudData.logs.filter(l=>!(l[2]===n && l[3].toString().split('T')[0]===d.toString().split('T')[0] && l[4]===c)); renderLogsTable(); } 
-        } else if(opt?.toUpperCase()==='EDIT') { 
+        const opt = prompt("Type 'DELETE' to remove or 'EDIT' to modify:");
+        if(!opt) return;
+
+        if(opt.toUpperCase()==='DELETE') { 
+            if(confirm("Are you sure you want to delete this record?")) { 
+                cloudData.logs=cloudData.logs.filter(l=>!(l[2]===n && l[3].toString().split('T')[0]===d.toString().split('T')[0] && l[4]===c)); 
+                renderLogsTable();
+                showToast("🗑️ DELETED");
+                // Nota: Aquí se enviaría el DELETE al server si el backend lo soporta
+            } 
+        } else if(opt.toUpperCase()==='EDIT') { 
             editingRef = { n, d: d.toString().split('T')[0], c }; 
             document.getElementById('sel-employee').value=n; 
             document.getElementById('start-date').value=editingRef.d; 
@@ -336,19 +307,47 @@
     function updateAnalytics(data) {
         const counts = {}, offenders = {}, dates = {};
         const offenderCriteria = ['SICK', 'PERSONAL', 'TARDY', 'LEFT EARLY'];
+        
         data.forEach(l => { 
             counts[l[4]] = (counts[l[4]] || 0) + 1; 
             const dKey = l[3].toString().split('T')[0];
             dates[dKey] = (dates[dKey] || 0) + 1;
             if(offenderCriteria.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
         });
+
         const sortedOff = Object.entries(offenders).sort((a,b)=>b[1]-a[1]).slice(0,10);
         document.getElementById('top-ten-body').innerHTML = sortedOff.map(([n,c])=>`<tr><td>${n}</td><td><b>${c}</b></td></tr>`).join('');
+        
+        // GRÁFICA DE BARRAS REQUERIDA (INCIDENTS)
         if(myCharts.c1) myCharts.c1.destroy();
-        myCharts.c1 = new Chart(document.getElementById('chartConcepts'), { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: Object.keys(counts).map(k => COLORS[k] || '#999') }] }, options: { plugins: { legend: {display:false}, title: { display: true, text: 'INCIDENTS' } } } });
+        myCharts.c1 = new Chart(document.getElementById('chartConcepts'), { 
+            type: 'bar', 
+            data: { 
+                labels: Object.keys(counts), 
+                datasets: [{ 
+                    data: Object.values(counts), 
+                    backgroundColor: Object.keys(counts).map(k => COLORS[k] || '#999') 
+                }] 
+            }, 
+            options: { 
+                responsive: true,
+                plugins: { legend: {display:false}, title: { display: true, text: 'INCIDENTS SUMMARY' } } 
+            } 
+        });
+
         const trendLabels = Object.keys(dates).sort().slice(-10);
         if(myCharts.c2) myCharts.c2.destroy();
-        myCharts.c2 = new Chart(document.getElementById('chartTrend'), { type: 'line', data: { labels: trendLabels.map(d => d.split('-').slice(1).join('/')), datasets: [{ label: 'Total', data: trendLabels.map(d=>dates[d]), borderColor: '#5d4037', fill: true, tension: 0.4 }] }, options: { plugins: { title: { display: true, text: 'TREND' } } } });
+        myCharts.c2 = new Chart(document.getElementById('chartTrend'), { 
+            type: 'line', 
+            data: { 
+                labels: trendLabels.map(d => d.split('-').slice(1).join('/')), 
+                datasets: [{ label: 'Daily Total', data: trendLabels.map(d=>dates[d]), borderColor: '#5d4037', fill: true, tension: 0.4 }] 
+            }, 
+            options: { 
+                responsive: true,
+                plugins: { title: { display: true, text: 'TREND (LAST 10 DAYS)' } } 
+            } 
+        });
     }
 
     async function setReturnManual(name, date) {
@@ -367,28 +366,50 @@
         if(!confirm(`Terminate ${name}? History remains.`)) return;
         const comp = document.getElementById('main-company').value;
         cloudData.employees = cloudData.employees.filter(e => !(e[0] === name && e[1] === comp));
-        refreshUI(); showSync(true); fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmp", name: name, company: "DELETE_FLAG" }) }).then(()=>showSync(false));
+        refreshUI(); 
+        showSync(true); 
+        fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmp", name: name, company: "DELETE_FLAG" }) }).then(()=>showSync(false));
     }
 
     async function addEmployee() {
-        const comp = document.getElementById('main-company').value, dept = document.getElementById('main-dept').value, name = document.getElementById('new-name').value.trim().toUpperCase();
+        const comp = document.getElementById('main-company').value, 
+              dept = document.getElementById('main-dept').value, 
+              name = sanitize(document.getElementById('new-name').value);
+              
         if(dept === "ALL" || !name) return alert("Select Dept and Name");
         if(cloudData.employees.some(e => e[0] === name && e[1] === comp)) return alert("Duplicate!");
-        cloudData.employees.push([name, comp, dept]); refreshUI(); document.getElementById('new-name').value = ""; showToast("👤 ADDED");
-        showSync(true); fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmp", name, company: comp, dept }) }).then(()=>showSync(false));
+        
+        cloudData.employees.push([name, comp, dept]); 
+        refreshUI(); 
+        document.getElementById('new-name').value = ""; 
+        showToast("👤 ADDED");
+        showSync(true); 
+        fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "addEmp", name, company: comp, dept }) }).then(()=>showSync(false));
     }
 
     function updateReturn() {
-        const c = document.getElementById('concept').value, s = document.getElementById('start-date').value, d = parseInt(document.getElementById('days').value) || 0, target = document.getElementById('return-date-text');
+        const c = document.getElementById('concept').value, 
+              s = document.getElementById('start-date').value, 
+              d = parseInt(document.getElementById('days').value) || 0, 
+              target = document.getElementById('return-date-text');
+              
         if(!s) return target.innerText = "---";
         if(c === 'LOA') return target.innerText = "PENDING";
         if(['TARDY', 'LEFT EARLY'].includes(c)) return target.innerText = formatDate(s);
-        let cur = new Date(s + 'T00:00:00'); let added = 0;
-        while(added < d) { cur.setDate(cur.getDate()+1); if(cur.getDay()!==0 && cur.getDay()!==6) added++; }
+        
+        let cur = new Date(s + 'T00:00:00'); 
+        let added = 0;
+        while(added < d) { 
+            cur.setDate(cur.getDate()+1); 
+            if(cur.getDay()!==0 && cur.getDay()!==6) added++; 
+        }
         target.innerText = formatDate(cur.toISOString().split('T')[0]);
     }
 
-    function handleConceptChange() { document.getElementById('days-wrapper').style.visibility = (['TARDY', 'LEFT EARLY', 'LOA'].includes(document.getElementById('concept').value)) ? 'hidden' : 'visible'; updateReturn(); }
+    function handleConceptChange() { 
+        document.getElementById('days-wrapper').style.visibility = (['TARDY', 'LEFT EARLY', 'LOA'].includes(document.getElementById('concept').value)) ? 'hidden' : 'visible'; 
+        updateReturn(); 
+    }
     
     function formatDate(d) { 
         if(!d || d === '---' || d === 'PENDING') return d; 
@@ -403,11 +424,25 @@
 
     function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none', 2500); }
     function showSync(s) { document.getElementById('sync-indicator').style.display = s ? 'block' : 'none'; }
-    function showTab(id, e) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); }
-    function updateDeptOptions() { const comp = document.getElementById('main-company').value, opts = DEPARTMENTS[comp]; let h = opts.length > 1 ? '<option value="ALL">ALL DEPTS</option>' : ''; h += opts.map(d => `<option value="${d}">${d}</option>`).join(''); document.getElementById('main-dept').innerHTML = h; refreshUI(); }
+    function showTab(id, e) { 
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); 
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        e.currentTarget.classList.add('active'); 
+    }
+    
+    function updateDeptOptions() { 
+        const comp = document.getElementById('main-company').value, 
+              opts = DEPARTMENTS[comp]; 
+        let h = opts.length > 1 ? '<option value="ALL">ALL DEPTS</option>' : ''; 
+        h += opts.map(d => `<option value="${d}">${d}</option>`).join(''); 
+        document.getElementById('main-dept').innerHTML = h; 
+        refreshUI(); 
+    }
 
     setDefaultFilters();
     updateDeptOptions();
+    fullRefresh();
 </script>
 </body>
 </html>
