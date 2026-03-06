@@ -13,7 +13,7 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: var(--text); }
         
-        /* Login Overlay */
+        /* Pantalla de Login */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; color: white; }
         .login-box { background: white; padding: 40px; border-radius: 15px; color: var(--text); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
         .login-box input { width: 100%; font-size: 28px; text-align: center; letter-spacing: 8px; margin-bottom: 20px; padding: 10px; border: 2px solid var(--accent); border-radius: 8px; }
@@ -52,7 +52,7 @@
     </div>
 </div>
 
-<div id="loading-overlay">SYNCING...</div>
+<div id="loading-overlay">SYNCING DATABASE...</div>
 <div id="toast">✅ DONE!</div>
 
 <div class="app-container" id="app-main">
@@ -140,8 +140,7 @@
 </div>
 
 <script>
-    // URL ACTUALIZADA
-    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbwesvcR3wSqeixh2oseNFRvpDbyrQMbRTUPP7YsOc8EMQMCHlt3V9FEqUpc7W0QAUutOw/exec";
+    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzcqO9g2od7E7yK6PlT273PB6r7JqH-IkRBrzFozedLr3t5AgyYh1_kg5SS6EBsQ57PVg/exec";
     
     const DEPARTMENTS = { 
         "TELEGRAPH": ["FROZEN DOUGH AM", "FROZEN DOUGH PM", "BAKING", "COOKIES", "COFFEE BEAN", "MAINTENANCE", "SANITATION", "KANBAN", "WAREHOUSE"], 
@@ -172,17 +171,13 @@
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
-        } catch(e) { 
-            console.error(e);
-            alert("Error: Database connection failed. Please check your Script URL."); 
-        }
+        } catch(e) { alert("Error connecting to database. Please refresh."); }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
     function setupAccess() {
         const compSel = document.getElementById('main-company');
         const deptSel = document.getElementById('main-dept');
-        
         if(currentUser.access !== 'ADMIN') {
             compSel.value = "TELEGRAPH";
             compSel.disabled = true;
@@ -199,7 +194,7 @@
 
     function updateDeptOptions(lockedDept = null) {
         const comp = document.getElementById('main-company').value;
-        const opts = DEPARTMENTS[comp];
+        const opts = DEPARTMENTS[comp] || ["GENERAL"];
         let h = (currentUser.access === 'ADMIN') ? '<option value="ALL">ALL DEPTS</option>' : '';
         h += opts.map(d => `<option value="${d}">${d}</option>`).join('');
         document.getElementById('main-dept').innerHTML = h;
@@ -220,14 +215,11 @@
     function refreshUI() {
         const comp = document.getElementById('main-company').value;
         const dept = document.getElementById('main-dept').value;
-        
         const fEmps = cloudData.employees.filter(e => e[1] === comp && (dept === 'ALL' || e[2] === dept));
         document.getElementById('sel-employee').innerHTML = fEmps.map(e => `<option value="${e[0]}">${e[0]}</option>`).join('');
         document.getElementById('staff-body').innerHTML = fEmps.map(e => `<tr><td>${e[0]}</td><td>${e[2]}</td><td>---</td></tr>`).join('');
-        
         const historic = [...new Set(cloudData.logs.filter(l => l[0] === comp && (dept === 'ALL' || l[1] === dept)).map(l => l[2]))].sort();
         document.getElementById('filter-emp').innerHTML = '<option value="ALL">ALL STAFF</option>' + historic.map(n => `<option value="${n}">${n}</option>`).join('');
-        
         renderLogsTable();
     }
 
@@ -236,14 +228,9 @@
         const dept = document.getElementById('main-dept').value;
         const fEmp = document.getElementById('filter-emp').value;
         const fCon = document.getElementById('filter-concept').value;
-
         let filtered = cloudData.logs.filter(l => 
-            l[0] === comp && 
-            (dept === 'ALL' || l[1] === dept) && 
-            (fEmp === 'ALL' || l[2] === fEmp) && 
-            (fCon === 'ALL' || l[4] === fCon)
+            l[0] === comp && (dept === 'ALL' || l[1] === dept) && (fEmp === 'ALL' || l[2] === fEmp) && (fCon === 'ALL' || l[4] === fCon)
         );
-        
         document.getElementById('logs-body').innerHTML = filtered.slice(-30).reverse().map(l => `
             <tr><td>${l[3].split('T')[0]}</td><td><b>${l[2]}</b></td><td>${l[6]}</td><td>${l[4]}</td><td>${l[7]||''}</td></tr>
         `).join('');
@@ -257,10 +244,8 @@
             counts[l[4]] = (counts[l[4]] || 0) + 1; 
             if(criteria.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
         });
-        
         const sortedOff = Object.entries(offenders).sort((a,b)=>b[1]-a[1]).slice(0,10);
         document.getElementById('top-ten-body').innerHTML = sortedOff.map(([n,c])=>`<tr><td>${n}</td><td><b>${c}</b></td></tr>`).join('');
-
         if(myCharts.c1) myCharts.c1.destroy();
         myCharts.c1 = new Chart(document.getElementById('chartConcepts'), {
             type: 'pie',
@@ -273,13 +258,11 @@
         const date = document.getElementById('start-date').value;
         const concept = document.getElementById('concept').value;
         if(!name || !date) return alert("Select staff and date");
-
         const comp = document.getElementById('main-company').value;
         const dept = document.getElementById('main-dept').value;
         const days = document.getElementById('days').value;
         const ret = document.getElementById('return-date-text').innerText;
         const notes = document.getElementById('comments').value.toUpperCase();
-
         showToast("SAVING...");
         await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "saveLog", company: comp, dept, name, rawDate: date, concept, days, return: ret, notes }) });
         fullRefresh();
@@ -304,21 +287,4 @@
         if(!s) return;
         let cur = new Date(s + 'T00:00:00');
         let added = 0;
-        while(added < d) { cur.setDate(cur.getDate()+1); if(cur.getDay()!==0 && cur.getDay()!==6) added++; }
-        document.getElementById('return-date-text').innerText = cur.toISOString().split('T')[0];
-    }
-
-    function logout() { location.reload(); }
-    function showTab(id, e) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        e.currentTarget.classList.add('active');
-    }
-    function handleConceptChange() {
-        document.getElementById('days-wrapper').style.visibility = (['TARDY', 'LEFT EARLY', 'LOA'].includes(document.getElementById('concept').value)) ? 'hidden' : 'visible';
-    }
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none', 2500); }
-</script>
-</body>
-</html>
+        while(added < d) { cur.setDate(cur
