@@ -140,7 +140,8 @@
 </div>
 
 <script>
-    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbxVCloFjfvAZUiWzxekZbgu26YdRe3155SA81dhZBXRUuoTTEsguSXyy10RO9-RbtLi/exec";
+    // URL ACTUALIZADA
+    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbwesvcR3wSqeixh2oseNFRvpDbyrQMbRTUPP7YsOc8EMQMCHlt3V9FEqUpc7W0QAUutOw/exec";
     
     const DEPARTMENTS = { 
         "TELEGRAPH": ["FROZEN DOUGH AM", "FROZEN DOUGH PM", "BAKING", "COOKIES", "COFFEE BEAN", "MAINTENANCE", "SANITATION", "KANBAN", "WAREHOUSE"], 
@@ -154,6 +155,7 @@
 
     async function checkLogin() {
         const pin = document.getElementById('pin-input').value;
+        if(!pin) return;
         document.getElementById('loading-overlay').style.display = 'flex';
         
         try {
@@ -170,7 +172,10 @@
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
-        } catch(e) { alert("Error connecting to database"); }
+        } catch(e) { 
+            console.error(e);
+            alert("Error: Database connection failed. Please check your Script URL."); 
+        }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
@@ -202,22 +207,27 @@
 
     async function fullRefresh() {
         document.getElementById('loading-overlay').style.display = 'flex';
-        const r = await fetch(CLOUD_URL);
-        const d = await r.json();
-        cloudData.logs = d.logs;
-        cloudData.employees = d.employees;
-        refreshUI();
+        try {
+            const r = await fetch(CLOUD_URL);
+            const d = await r.json();
+            cloudData.logs = d.logs;
+            cloudData.employees = d.employees;
+            refreshUI();
+        } catch(e) { console.error(e); }
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
     function refreshUI() {
         const comp = document.getElementById('main-company').value;
         const dept = document.getElementById('main-dept').value;
+        
         const fEmps = cloudData.employees.filter(e => e[1] === comp && (dept === 'ALL' || e[2] === dept));
         document.getElementById('sel-employee').innerHTML = fEmps.map(e => `<option value="${e[0]}">${e[0]}</option>`).join('');
         document.getElementById('staff-body').innerHTML = fEmps.map(e => `<tr><td>${e[0]}</td><td>${e[2]}</td><td>---</td></tr>`).join('');
+        
         const historic = [...new Set(cloudData.logs.filter(l => l[0] === comp && (dept === 'ALL' || l[1] === dept)).map(l => l[2]))].sort();
         document.getElementById('filter-emp').innerHTML = '<option value="ALL">ALL STAFF</option>' + historic.map(n => `<option value="${n}">${n}</option>`).join('');
+        
         renderLogsTable();
     }
 
@@ -226,9 +236,14 @@
         const dept = document.getElementById('main-dept').value;
         const fEmp = document.getElementById('filter-emp').value;
         const fCon = document.getElementById('filter-concept').value;
+
         let filtered = cloudData.logs.filter(l => 
-            l[0] === comp && (dept === 'ALL' || l[1] === dept) && (fEmp === 'ALL' || l[2] === fEmp) && (fCon === 'ALL' || l[4] === fCon)
+            l[0] === comp && 
+            (dept === 'ALL' || l[1] === dept) && 
+            (fEmp === 'ALL' || l[2] === fEmp) && 
+            (fCon === 'ALL' || l[4] === fCon)
         );
+        
         document.getElementById('logs-body').innerHTML = filtered.slice(-30).reverse().map(l => `
             <tr><td>${l[3].split('T')[0]}</td><td><b>${l[2]}</b></td><td>${l[6]}</td><td>${l[4]}</td><td>${l[7]||''}</td></tr>
         `).join('');
@@ -242,8 +257,10 @@
             counts[l[4]] = (counts[l[4]] || 0) + 1; 
             if(criteria.includes(l[4])) offenders[l[2]] = (offenders[l[2]] || 0) + 1;
         });
+        
         const sortedOff = Object.entries(offenders).sort((a,b)=>b[1]-a[1]).slice(0,10);
         document.getElementById('top-ten-body').innerHTML = sortedOff.map(([n,c])=>`<tr><td>${n}</td><td><b>${c}</b></td></tr>`).join('');
+
         if(myCharts.c1) myCharts.c1.destroy();
         myCharts.c1 = new Chart(document.getElementById('chartConcepts'), {
             type: 'pie',
@@ -255,12 +272,14 @@
         const name = document.getElementById('sel-employee').value;
         const date = document.getElementById('start-date').value;
         const concept = document.getElementById('concept').value;
-        if(!name || !date) return alert("Please select employee and date");
+        if(!name || !date) return alert("Select staff and date");
+
         const comp = document.getElementById('main-company').value;
         const dept = document.getElementById('main-dept').value;
         const days = document.getElementById('days').value;
         const ret = document.getElementById('return-date-text').innerText;
         const notes = document.getElementById('comments').value.toUpperCase();
+
         showToast("SAVING...");
         await fetch(CLOUD_URL, { method: "POST", body: JSON.stringify({ action: "saveLog", company: comp, dept, name, rawDate: date, concept, days, return: ret, notes }) });
         fullRefresh();
